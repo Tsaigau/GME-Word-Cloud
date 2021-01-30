@@ -1,0 +1,53 @@
+import praw
+import pandas as pd
+import datetime as dt
+
+def get_date(created):
+    return dt.datetime.fromtimestamp(created)
+
+reddit = praw.Reddit(client_id='xxxxxxxxxxx', \
+                     client_secret='xxxxxxx \
+                     user_agent='xxxxxxxx \
+                     username='xxxxx', \
+                     password='xxxxxxxxx')
+                     
+subreddit = reddit.subreddit('wallstreetbets')
+hot_subreddit = subreddit.hot()
+hot_subreddit = subreddit.hot(limit=1000)
+top_posts = reddit.subreddit('wallstreetbets').top(limit=100)
+for post in top_posts:
+    print(post.title)
+    
+ 
+posts = []
+wall_subreddit = reddit.subreddit('wallstreetbets')
+for post in wall_subreddit.top(limit=1000):
+    posts.append([post.title, post.score, post.id, post.subreddit, post.url, post.num_comments, post.selftext, post.created])
+posts = pd.DataFrame(posts,columns=['title', 'score', 'id', 'subreddit', 'url', 'num_comments', 'body', 'created'])
+print(posts)
+
+posts = pd.DataFrame(posts)
+_timestamp = posts["created"].apply(get_date)
+posts = posts.assign(timestamp = _timestamp)
+posts["timestamp"] = posts['timestamp'].apply(lambda x: x.strftime('%Y-%m-%d'))
+
+df_feature = posts[posts["timestamp"]> "2021-01-01"]
+timelist = set(df_feature.timestamp)
+word = []
+for text in df_feature.title:
+    word.append(text.split(" "))
+    
+cloud = []
+for i in range(len(word)):
+    for j in range(len(word[i])):
+                   cloud.append(word[i][j])
+print(cloud)
+
+import nltk
+nltk.download('punkt')
+from wordcloud import WordCloud
+
+text = ' '.join(nltk.word_tokenize(" ".join(cloud)))
+cloud = WordCloud().generate(text)
+cloud.to_file('output.png')
+
